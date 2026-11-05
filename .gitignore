@@ -3,3 +3,10 @@ sessions/
 .ipynb_checkpoints/
 __pycache__/
 .DS_Store
+lecture/*.aux
+lecture/*.log
+lecture/*.nav
+lecture/*.out
+lecture/*.snm
+lecture/*.toc
+lecture/*.vrb

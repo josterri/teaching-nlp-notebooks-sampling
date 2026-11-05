@@ -181,7 +181,7 @@
 \begin{itemize}\compactlist
 \item After the prompt, the language model has a probability $p_i$ for each token $i$ of its vocabulary $V$
 \item One token is appended, and the step is repeated on the longer text
-\item With a random draw at each step, two runs give two texts
+\item With a random draw at each step, the texts of two runs differ
 \item The question: which token is appended, under which rule
 \end{itemize}
 
@@ -212,7 +212,7 @@
 \contentslist{1}
 \vspace{0.2em}
 {\color{mlgray}Worked Example: GPT-2 small after the first words of \textit{Pride and Prejudice}.\par}
-\note{0.5 min. Read the six learning goals aloud, part 1 first. Parts 1 to 5 are in symbols and schematic charts; every number of GPT-2 small is in part 6.}
+\note{0.5 min. Read the six learning goals aloud, part 1 first. Five rules lie between one next-token distribution and the appended token: greedy decoding, temperature, top-k, top-p, beam search.}
 \end{frame}
 
 \section{Next-Token Distribution}
@@ -231,7 +231,7 @@ After a context $c$, the language model has a \textbf{score} $z_i$ for each toke
 \begin{itemize}\compactlist
 \item A larger score $\rightarrow$ a larger probability
 \item $p_i > 0$ for every token, $\sum_i p_i = 1$
-\item $z_i + a$ for every token $\rightarrow$ the same $p$: only differences of scores count
+\item $z_i + a$ for every token $\rightarrow$ the same $p$: $p$ depends only on differences of scores
 \end{itemize}
 
 \column{0.48\textwidth}
@@ -254,7 +254,7 @@ A \textbf{continuation} $w_1, \dots, w_n$ of the context $c$ has the probability
 \vspace{1mm}
 \textbf{Intuition:}
 \begin{itemize}\compactlist
-\item Each factor is at most 1 $\rightarrow$ $P$ falls with every token
+\item Each factor is at most 1 $\rightarrow$ $P$ is smaller with every token
 \item $\log P \le 0$; closer to 0 $\rightarrow$ a more probable continuation
 \item A large first factor can be followed by small ones
 \end{itemize}
@@ -277,7 +277,7 @@ A \textbf{continuation} $w_1, \dots, w_n$ of the context $c$ has the probability
 \end{columns}
 
 \bottomnote{The probability of a continuation is the product of its next-token probabilities.}
-\note{2 min. Each factor is a softmax probability after a longer context: the context grows by one token per step. Ask why $\log P$ is used: a product of many small numbers underflows in floating point, a sum of logarithms stays in range. The first factor alone gives little information on $P$; part 5 has a case.}
+\note{2 min. Each factor is a softmax probability after a longer context: the context grows by one token per step. Ask why $\log P$ is used: a product of many small numbers is below the smallest floating-point number, a sum of logarithms is within range. The first factor alone has little information on $P$; part 5 has a case.}
 \end{frame}
 
 % ==================== CONCEPT: RULES ====================
@@ -327,7 +327,7 @@ Under \textbf{greedy decoding}, the next token is the token with the largest pro
 \textbf{Intuition:}
 \begin{itemize}\compactlist
 \item No draw $\rightarrow$ one prompt, one text, on every run
-\item Each step is decided alone: later probabilities stay out of the comparison
+\item Each step is decided alone: later probabilities are left out of the comparison
 \item Greedy decoding is temperature at $T \to 0$ and beam search at $B = 1$
 \end{itemize}
 
@@ -343,13 +343,13 @@ Under \textbf{greedy decoding}, the next token is the token with the largest pro
 \begin{frame}[t]{Probability of a Repeated Phrase}
 \begin{columns}[T]
 \column{0.48\textwidth}
-Under greedy decoding, a text can end in a loop: one phrase, repeated again and again.
+Under greedy decoding, the end of a text can be a loop: one phrase, repeated again and again.
 
 \vspace{3mm}
 \begin{block}{Discovery}
 Each copy of the phrase is added to the context. With every copy, does the probability of the next copy grow or fall?
 
-\uncover<2->{\textbf{Answer:} it grows. With each copy in the context, the next copy has a larger probability, and the loop continues to the last token (Holtzman et al., 2020).}
+\uncover<2->{\textbf{Answer:} it grows. With each copy in the context, the next copy has a larger probability, and the loop is unbroken to the last token (Holtzman et al., 2020).}
 \end{block}
 
 \column{0.48\textwidth}
@@ -392,7 +392,7 @@ Under \textbf{sampling}, the next token is drawn at random from a distribution $
 \end{columns}
 
 \bottomnote{Under temperature $T$, the scores are divided by $T$ before the softmax.}
-\note{2 min. Ask why the order is the same: division by a positive $T$ keeps $z_i > z_j$. The ratio of two probabilities is $p_i^{(T)} / p_j^{(T)} = e^{(z_i - z_j)/T}$: below $T = 1$ it is larger than at $T = 1$, above $T = 1$ closer to 1.}
+\note{2 min. Ask why the order is the same: $z_i / T > z_j / T$ for $z_i > z_j$ and every positive $T$. The ratio of two probabilities is $p_i^{(T)} / p_j^{(T)} = e^{(z_i - z_j)/T}$: below $T = 1$ it is larger than at $T = 1$, above $T = 1$ closer to 1.}
 \end{frame}
 
 % ==================== DISCOVERY REVEAL: LIMITS ====================
@@ -496,7 +496,7 @@ Under \textbf{top-p} sampling, or nucleus sampling, the kept set is the smallest
 \end{columns}
 
 \bottomnote{Under top-$p$, the likeliest tokens are kept until their mass is at least $\pi$.}
-\note{2 min. Holtzman et al. (2020) introduced nucleus sampling. Ask how many tokens are kept when one token alone has a mass above $\pi$: one, and the draw is greedy decoding. The bound $\mathrm{KL}(q \parallel p) \le -\log \pi$ holds after every prompt (Appendix A3).}
+\note{2 min. Holtzman et al. (2020) introduced nucleus sampling. Ask how many tokens are kept when one token alone has a mass above $\pi$: one, and the draw is greedy decoding. The bound $\mathrm{KL}(q \parallel p) \le -\log \pi$ is valid after every prompt (Appendix A3).}
 \end{frame}
 
 % ==================== DISCOVERY REVEAL: PEAKED, FLAT ====================
@@ -518,7 +518,7 @@ One $k$, one $\pi$ for both. Under top-$k$, after which distribution is the cut 
 \end{columns}
 
 \bottomnote{Under top-$k$ the number of kept tokens is fixed; under top-$p$, the kept mass.}
-\note{2.5 min. One minute for the room. In the second chart, the dashed line marks $k$. With one $k$, tokens of near-zero probability are kept after the peaked distribution, and likely tokens are cut after the flat one. Part 6 has the numbers of GPT-2 small after a peaked, a flat prompt.}
+\note{2.5 min. One minute for the room. In the second chart, $k$ is the dashed line. With one $k$, tokens of near-zero probability are kept after the peaked distribution, and likely tokens are cut after the flat one. Part 6 has the numbers of GPT-2 small after a peaked, a flat prompt.}
 \end{frame}
 
 \section{Beam Search}
@@ -598,7 +598,7 @@ Under which condition is the path $b\,y$ more probable than every path starting 
 \end{center}
 \end{columns}
 
-\bottomnote{A first token of smaller probability can begin the most probable continuation.}
+\bottomnote{The first token of the most probable continuation can have the smaller probability.}
 \note{2.5 min. One minute for the room. The condition has two sides: the first factor of $a$ is larger, the second factor of $b$ is larger. Ask for the smallest $B$ with $b\,y$ as the result: $B = 2$, since $b$ is the second likeliest first token. Part 6 has the case with the numbers of GPT-2 small.}
 \end{frame}
 
@@ -681,7 +681,7 @@ Equal to greedy decoding at & every setting & $T \to 0$ & $k = 1$ & $\pi \to 0$ 
 % no-bottomnote: the parts, part 6 next, the learning goals ahead.
 \begin{frame}[t,label=part6]{Worked Example: GPT-2 Small}
 \contentslist{6}
-\note{0.5 min. Read goal 6 aloud. Every number in part 6 is computed by GPT-2 small after three prompts; the three Colab notebooks have the same numbers.}
+\note{0.5 min. Read goal 6 aloud. The three prompts: the Austen prompt; the peaked prompt, The Prime Minister of the United; the flat prompt, I went to the.}
 \end{frame}
 
 % ==================== WORKED NUMBERS: TOKENS ====================
@@ -718,7 +718,7 @@ Five tokens & & 0.278 \\
 \end{columns}
 
 \bottomnote{After the Austen prompt, the likeliest token has probability 0.182, and 3,784 tokens have a mass of 0.9.}
-\note{1.5 min. The scores are near $-90$; only their differences count. Add the column on the board: $0.182 + 0.038 + 0.025 + 0.019 + 0.014 = 0.278$. Under greedy decoding, \texttt{the} is appended. With 3,784 tokens for 0.9 of the mass, the distribution after this prompt is flat.}
+\note{1.5 min. The scores are near $-90$; $p$ depends only on their differences. Add the column on the board: $0.182 + 0.038 + 0.025 + 0.019 + 0.014 = 0.278$. Under greedy decoding, \texttt{the} is appended. With 3,784 tokens for 0.9 of the mass, the distribution after this prompt is flat.}
 \end{frame}
 
 % ==================== COMPUTATION IN TWO COLUMNS ====================
@@ -755,7 +755,7 @@ Under temperature $T$, the ratio is $p^{(T)}_{\text{the}} / p^{(T)}_{\text{there
 \end{columns}
 
 \bottomnote{At $T = 0.5$, \texttt{the} is 23.2 times as probable as \texttt{there}; at $T = 2$, 2.20 times.}
-\note{2 min. Compute $e^{3.146}$ on the board: 23.2. For the ratio, two scores suffice; for $p_{\text{the}}$ itself, all 50,257, since the denominator of the softmax is a sum over the vocabulary. The entropies show the limits of part 3: 0.69 nats is near greedy decoding, 9.88 near the uniform 10.82.}
+\note{2 min. Compute $e^{3.146}$ on the board: 23.2. For the ratio, two scores suffice; for $p_{\text{the}}$ itself, all 50,257, since the denominator of the softmax is a sum over the vocabulary. The entropies are near the limits of part 3: 0.69 nats is near greedy decoding, 9.88 near the uniform 10.82.}
 \end{frame}
 
 % ==================== WORKED NUMBERS: TOP-K, TOP-P ====================
@@ -845,7 +845,7 @@ Path & $p(w_1)$ & $p(w_2 \mid w_1)$ & $P$ \\
 \end{columns}
 
 \bottomnote{With $B = 2$, the result is \texttt{there is}, 5.9 times as probable as the greedy path \texttt{the United}.}
-\note{2 min. Walk through $B = 2$: after step 1, \texttt{the} and \texttt{there} are kept; of their extensions, \texttt{there is} and \texttt{there are} are the two largest. In the tree, the condition of part 5 holds with $a$ = the, $b$ = there, $y$ = is: $0.0159 > 0.0027$. After \texttt{the}, the likeliest second token has 0.01472.}
+\note{2 min. Walk through $B = 2$: after step 1, \texttt{the} and \texttt{there} are kept; of their extensions, \texttt{there is} and \texttt{there are} are the two largest. In the tree, the condition of part 5 is met with $a$ = the, $b$ = there, $y$ = is: $0.0159 > 0.0027$. After \texttt{the}, the likeliest second token has 0.01472.}
 \end{frame}
 
 % ==================== WORKED NUMBERS: LOOP ====================
@@ -901,7 +901,7 @@ $T = 1.5$, draw 0 & $-169.60$ & WWI and the 1914 Ottoman Imperial Question origi
 
 \normalsize
 \bottomnote{Over 20 tokens, $\log P$ is $-25.14$ under beam search of width 5 and $-169.60$ for a draw at $T = 1.5$.}
-\note{1.5 min. Read the $\log P$ column from top to bottom. Beam search at $B = 2$ ends 0.01 below greedy decoding: the second checkpoint question. Another draw at $T = 0.7$ or $1.5$ gives another text; the three search texts are the same on every run.}
+\note{1.5 min. Read the $\log P$ column from top to bottom. At $B = 2$, $\log P$ is 0.01 below greedy decoding: the second checkpoint question. Another draw at $T = 0.7$ or $1.5$ gives another text; the three search texts are the same on every run.}
 \end{frame}
 
 % ==================== PYTHON CODE ====================
@@ -909,25 +909,25 @@ $T = 1.5$, draw 0 & $-169.60$ & WWI and the 1914 Ottoman Imperial Question origi
 \begin{columns}[T]
 \column{0.52\textwidth}
 \begin{lstlisting}[language=Python]
-z = logits("I went to the")             # 50,257 scores
-p = next_token_dist(z, T=1.0)            # T = 1: GPT-2's p, no draw
-q = next_token_dist(z, T=1.0, k=5)       # top-k, k = 5
-r = next_token_dist(z, T=1.0, top_p=0.9) # top-p, pi = 0.9
-print(word(p.argmax()), p.max())         # hospital 0.0331
-print((q > 0).sum(), q.max())            # 5 0.2950
-print((r > 0).sum())                     # 4797
+z = logits("I went to the")                 # 50,257 scores
+p = next_token_dist(z, T=1.0)               # T = 1, no draw
+q = next_token_dist(z, T=1.0, k=5)          # top-k
+r = next_token_dist(z, T=1.0, top_p=0.9)    # top-p
+print(word(p.argmax()), round(p.max(), 4))  # hospital 0.0331
+print((q > 0).sum(), round(q.max(), 4))     # 5 0.295
+print((r > 0).sum())                        # 4797
 \end{lstlisting}
 
 \column{0.44\textwidth}
 \textbf{Key outputs:}
 \begin{itemize}\compactlist
 \item \texttt{p.max()}: 0.0331, the probability of \texttt{hospital}
-\item \texttt{q}: 5 tokens kept, \texttt{hospital} at 0.2950
+\item \texttt{q}: 5 tokens kept, \texttt{hospital} at 0.295
 \item \texttt{r}: 4,797 tokens kept at $\pi = 0.9$
 \end{itemize}
 
 \vspace{2mm}
-\textbf{Note:} $0.0331 / 0.1122 = 0.2950$, the value of top-5 after the flat prompt.
+\textbf{Note:} $0.0331 / 0.1122 = 0.295$, the value of top-5 after the flat prompt.
 \end{columns}
 
 \bottomnote{Temperature, top-k, top-p are arguments of one function, \texttt{next\_token\_dist}.}
@@ -973,7 +973,7 @@ Derivations with checks on GPT-2 small: \href{\colab{02_sampling_mathematics}}{\
 \item Greedy decoding: $\arg\max_i p_i$; the probability of a repeated phrase grows with each copy
 \item $p^{(T)} \propto e^{z / T}$: greedy decoding at $T \to 0$, uniform at $T \to \infty$
 \item Top-$k$: $k$ tokens fixed; top-$p$: the mass $\pi$ fixed
-\item Beam search: $B$ paths kept, $B = 1$ greedy; a wider beam can end on a smaller $\log P$
+\item Beam search: $B$ paths kept, $B = 1$ greedy; with a wider beam, $\log P$ can be smaller
 \end{enumerate}
 
 \column{0.48\textwidth}
@@ -1086,13 +1086,13 @@ Under the \textbf{repetition penalty} $\theta > 1$ (Keskar et al., 2019), the sc
 \textbf{Step 1:} $\mathrm{softmax}(z + a) = \mathrm{softmax}(z)$ for every constant $a$: $p$ is the same at every offset of the scores.
 
 \vspace{2mm}
-\textbf{Step 2:} the penalty depends on the offset: for $z_i < 0$, the score falls by $(\theta - 1)\,|z_i|$, a fall that grows with $|z_i|$.
+\textbf{Step 2:} the penalty depends on the offset: for $z_i < 0$, the score is lower by $(\theta - 1)\,|z_i|$, a difference that grows with $|z_i|$.
 
 \vspace{2mm}
 \textbf{Interpretation:} two score vectors with one softmax $p$ can give two different distributions after the penalty.
 
 \bottomnote{The repetition penalty depends on the offset of the scores; the softmax is the same at every offset.}
-\note{1.5 min. In Hugging Face transformers, negative scores are multiplied by $\theta$, since a division would raise them. After the Austen prompt, the scores of GPT-2 small lie between $-119$ and $-88$: the penalty is $\theta z_i$ for every token.}
+\note{1.5 min. In Hugging Face transformers, negative scores are multiplied by $\theta$, since after a division they would be larger. After the Austen prompt, the scores of GPT-2 small lie between $-119$ and $-88$: the penalty is $\theta z_i$ for every token.}
 \end{frame}
 
 \end{document}

@@ -22,7 +22,7 @@ from nbclient import NotebookClient
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
-NOTEBOOKS = {"01": "01_sampling_visual", "02": "02_sampling_mathematics"}
+NOTEBOOKS = {"01": "01_sampling_visual", "02": "02_sampling_mathematics", "03": "03_beam_search"}
 WIDGET_VIEW = "application/vnd.jupyter.widget-view+json"
 WIDGET_STATE = "application/vnd.jupyter.widget-state+json"
 

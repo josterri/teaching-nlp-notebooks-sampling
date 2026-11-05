@@ -115,9 +115,11 @@
    under each part ahead: its learning goal\par}}
 
 % Footline: Madrid's three boxes, the current part's name in the middle one,
-% the short title before the first part.
+% the short title before the first part. \footpart, set by \gdef around the
+% overview page of a part, which lies before that part's \section.
 \makeatletter
-\newcommand{\partortitle}{\ifx\insertsectionhead\@empty\insertshorttitle\else\insertsectionhead\fi}
+\def\footpart{}
+\newcommand{\partortitle}{\ifx\footpart\@empty\ifx\insertsectionhead\@empty\insertshorttitle\else\insertsectionhead\fi\else\footpart\fi}
 \makeatother
 \setbeamertemplate{footline}{%
   \leavevmode%
@@ -156,6 +158,74 @@
   \draw[arr] (d) -- (w);
 \end{tikzpicture}}
 
+% Six pictures of the decoding rules, each 2.0 cm wide, 1.4 cm high; #1 is the
+% colour of the marks. The overview has five of them, one per part.
+\newcommand{\picdist}[1]{%
+  \foreach \x/\h in {0/1.0, 0.34/0.68, 0.68/0.46, 1.02/0.32, 1.36/0.21, 1.7/0.14}
+    \fill[#1] (\x, 0) rectangle ++(0.26, \h);}
+\newcommand{\picgreedy}[1]{%
+  \foreach \x/\h in {0/0.46, 0.68/0.68, 1.02/0.32, 1.36/0.21, 1.7/0.14}
+    \fill[#1!35] (\x, 0) rectangle ++(0.26, \h);
+  \fill[#1] (0.34, 0) rectangle ++(0.26, 1.0);
+  \draw[->, thick, #1] (0.47, 1.4) -- (0.47, 1.08);}
+\newcommand{\pictemp}[1]{%
+  \foreach \x/\h in {0/1.0, 0.19/0.18, 0.38/0.1, 0.57/0.06}
+    \fill[#1] (\x, 0) rectangle ++(0.14, \h);
+  \draw[->, thick, #1] (0.82, 0.45) -- (1.12, 0.45);
+  \foreach \x/\h in {1.25/0.36, 1.4/0.34, 1.55/0.32, 1.7/0.3, 1.85/0.28}
+    \fill[#1] (\x, 0) rectangle ++(0.11, \h);}
+\newcommand{\piccut}[1]{%
+  \foreach \x/\h in {0/1.0, 0.28/0.7, 0.56/0.5}
+    \fill[#1] (\x, 0) rectangle ++(0.2, \h);
+  \foreach \x/\h in {0.84/0.36, 1.12/0.26, 1.4/0.19, 1.68/0.13}
+    \fill[#1!25] (\x, 0) rectangle ++(0.2, \h);
+  \draw[dashed, thick, #1] (0.80, -0.08) -- (0.80, 1.15);}
+\newcommand{\pictopp}[1]{%
+  \fill[#1] (0.62, 0) rectangle ++(0.76, 0.42);
+  \fill[#1!80] (0.62, 0.45) rectangle ++(0.76, 0.26);
+  \fill[#1!60] (0.62, 0.74) rectangle ++(0.76, 0.16);
+  \fill[#1!25] (0.62, 0.93) rectangle ++(0.76, 0.09);
+  \fill[#1!25] (0.62, 1.05) rectangle ++(0.76, 0.06);
+  \draw[thick, #1] (0.56, 1.25) -- (0.56, -0.04) -- (1.44, -0.04) -- (1.44, 1.25);
+  \draw[dashed, thick, #1] (0.35, 0.8) -- (1.65, 0.8);}
+\newcommand{\picbeam}[1]{%
+  \draw[thin, #1!30] (0.1, 0.55) -- (0.95, 0.05);
+  \draw[thin, #1!30] (0.95, 1.05) -- (1.85, 0.8);
+  \draw[thin, #1!30] (0.95, 0.55) -- (1.85, 0.05);
+  \draw[very thick, #1] (0.1, 0.55) -- (0.95, 1.05) -- (1.85, 1.25);
+  \draw[very thick, #1] (0.1, 0.55) -- (0.95, 0.55) -- (1.85, 0.45);
+  \foreach \px/\py in {0.1/0.55, 0.95/1.05, 0.95/0.55, 1.85/1.25, 1.85/0.45} \fill[#1] (\px, \py) circle (1.6pt);
+  \foreach \px/\py in {0.95/0.05, 1.85/0.8, 1.85/0.05} \fill[#1!30] (\px, \py) circle (1.6pt);}
+
+% \overview{k}: the five pictures in one row, the part's name under each.
+% k = 1 to 5: parts before k grey with a check, part k orange, later parts
+% plain; k = 6: all five orange; k = 7: all five with a check.
+\newcommand{\ovstate}[2]{%
+  \ifnum#1=7 \def\ovc{mlpurple}\def\ovt{black}\def\ovw{0.6pt}\def\ovf{}\def\ovm{$\checkmark$~}%
+  \else\ifnum#1=6 \def\ovc{mlorange}\def\ovt{mlorange}\def\ovw{1.4pt}\def\ovf{\bfseries}\def\ovm{}%
+  \else\ifnum#2<#1 \def\ovc{mlgray}\def\ovt{mlgray}\def\ovw{0.6pt}\def\ovf{}\def\ovm{$\checkmark$~}%
+  \else\ifnum#2=#1 \def\ovc{mlorange}\def\ovt{mlorange}\def\ovw{1.4pt}\def\ovf{\bfseries}\def\ovm{$\blacktriangleright$~}%
+  \else \def\ovc{mlpurple}\def\ovt{black}\def\ovw{0.6pt}\def\ovf{}\def\ovm{}%
+  \fi\fi\fi\fi}
+\newcommand{\overview}[1]{%
+\begin{tikzpicture}
+  \foreach \i/\ovpic in {1/\picdist, 2/\picgreedy, 3/\pictemp, 4/\piccut, 5/\picbeam} {
+    \ovstate{#1}{\i}
+    \begin{scope}[shift={({2.8 * (\i - 1)}, 0)}]
+      \draw[rounded corners, line width=\ovw, draw=\ovc] (-0.25, -0.25) rectangle (2.25, 1.6);
+      \ovpic{\ovc}
+      \node[text width=2.6cm, align=center, anchor=north, font=\small\ovf, text=\ovt] at (1.0, -0.4) {\ovm\i~\lpname{\i}};
+    \end{scope}}
+  \node[font=\small, text=mlgray] at (6.6, -1.55) {%
+    \ifcase#1\or {\color{mlorange}$\blacktriangleright$}~next%
+    \or $\checkmark$~finished\quad{\color{mlorange}$\blacktriangleright$}~next%
+    \or $\checkmark$~finished\quad{\color{mlorange}$\blacktriangleright$}~next%
+    \or $\checkmark$~finished\quad{\color{mlorange}$\blacktriangleright$}~next%
+    \or $\checkmark$~finished\quad{\color{mlorange}$\blacktriangleright$}~next%
+    \or {\color{mlorange}each one on the numbers of GPT-2 small}%
+    \or $\checkmark$~finished\fi};
+\end{tikzpicture}}
+
 \newcommand{\colab}[1]{https://colab.research.google.com/github/josterri/teaching-nlp-notebooks-sampling/blob/main/#1.ipynb}
 
 \title[Picking the Next Token]{Picking the Next Token,\\Greedy Decoding to Beam Search}
@@ -169,6 +239,28 @@
 % ==================== TITLE ====================
 \begin{frame}[plain]
 \titlepage
+\end{frame}
+
+% ==================== VISUAL: HOOK ====================
+\begin{frame}[t]{One Question Sent Twice}
+\vspace{5mm}
+\begin{center}
+\begin{tikzpicture}
+  \foreach \x/\run/\col/\la/\lb/\lc in {0/first/mlpurple/2.9/2.4/1.6, 6.6/second/mlorange/1.9/2.9/1.2} {
+    \fill[white] (\x, 0) rectangle ++(5.6, 4.2);
+    \fill[mllavender3] (\x + 0.04, 3.62) rectangle ++(5.52, 0.52);
+    \draw[rounded corners, thick, mlpurple] (\x, 0) rectangle ++(5.6, 4.2);
+    \node[font=\small\bfseries, text=mlpurple] at (\x + 2.8, 3.88) {chatbot, \run\ run};
+    \node[draw=mlpurple, fill=mllavender4, rounded corners, font=\small, minimum width=2.6cm, minimum height=0.6cm] at (\x + 3.9, 2.9) {one question};
+    \draw[rounded corners, thick, draw=\col] (\x + 0.3, 0.3) rectangle ++(3.6, 1.8);
+    \node[font=\small\bfseries, text=\col, anchor=west] at (\x + 0.4, 1.85) {\run\ answer};
+    \foreach \y/\len in {1.35/\la, 0.95/\lb, 0.55/\lc} \draw[line width=3pt, mlgray!50] (\x + 0.5, \y) -- ++(\len, 0);
+  }
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{One question sent twice to a chatbot can have two different answers.}
+\note{0.5 min. Ask the room to picture one chat window and one question, typed twice. The first run has one answer, the second run another: the grey lines of the two answers differ. Then the scenario: by which rule is each next token of an answer picked?}
 \end{frame}
 
 % ==================== HOOK ====================
@@ -206,6 +298,17 @@
 \note{2 min. Ask who has received two different answers to one question from a chatbot. Both answers come from one distribution per step; the difference lies in the rule by which the token is picked. Five rules are compared: greedy decoding, temperature, top-k, top-p, beam search.}
 \end{frame}
 
+% ==================== OVERVIEW 1 ====================
+\begin{frame}[t]{One Distribution, Five Decoding Rules}
+\vspace{12mm}
+\begin{center}
+\overview{1}
+\end{center}
+
+\bottomnote{One next-token distribution is the input of all five decoding rules.}
+\note{0.5 min. Five pictures from left to right: the next-token distribution, greedy decoding, temperature, the cuts top-k and top-p, beam search. The picture in orange is the part ahead; finished parts are grey with a check. The same row is repeated before each part.}
+\end{frame}
+
 % ==================== CONTENTS 1 ====================
 % no-bottomnote: the parts, part 1 next, the learning goals ahead.
 \begin{frame}[t,label=part1]{Learning Goals for Decoding}
@@ -216,6 +319,30 @@
 \end{frame}
 
 \section{Next-Token Distribution}
+
+% ==================== VISUAL: SOFTMAX ====================
+\begin{frame}[t]{From Scores to Probabilities}
+\vspace{5mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[mlgray] (-0.2, 1.3) -- (3.6, 1.3) node[right, font=\small, text=mlgray] {zero};
+  \foreach \x/\h in {0/2.2, 0.6/1.4, 1.2/0.9, 1.8/0.4, 2.4/-0.5, 3.0/-0.9}
+    \fill[mlblue] (\x, 1.3) rectangle ++(0.42, \h);
+  \node[font=\small\bfseries, text=mlpurple] at (1.7, 4.0) {scores};
+  \node[font=\small, text=mlgray] at (2.9, 0.15) {below zero};
+  \draw[->, very thick, mlpurple] (4.6, 2.0) -- node[above, font=\small\bfseries] {softmax} (6.8, 2.0);
+  \draw[mlgray] (7.3, 0.4) -- (11.1, 0.4);
+  \foreach \x/\h in {7.5/3.0, 8.1/1.35, 8.7/0.82, 9.3/0.5, 9.9/0.2, 10.5/0.14}
+    \fill[mlblue] (\x, 0.4) rectangle ++(0.42, \h);
+  \node[font=\small\bfseries, text=mlpurple] at (9.2, 4.0) {probabilities};
+  \node[font=\small, text=mlgray] at (9.2, 0.05) {all above zero};
+  \node[font=\small, text=mlgray, anchor=east] at (11.1, -0.35) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{A larger score gives a larger probability, and every probability is above zero.}
+\note{0.5 min. Point at the two bars below zero on the left: on the right, both have a small, positive probability. The order of the bars is the same on both sides. Then the formula of the softmax, with the sum over the vocabulary in the denominator.}
+\end{frame}
 
 % ==================== CONCEPT: SOFTMAX ====================
 \begin{frame}[t]{Softmax Probabilities From Scores}
@@ -240,6 +367,30 @@ After a context $c$, the language model has a \textbf{score} $z_i$ for each toke
 
 \bottomnote{The softmax of the scores is the next-token distribution $p$.}
 \note{2 min. Point at the negative scores in the left panel: each has a positive probability in the right one. Ask the room what happens to $p$ when a constant $a$ is added to every score: nothing, since $e^{z_i + a} = e^{a} e^{z_i}$ and $e^{a}$ cancels. A token is a word or a piece of a word.}
+\end{frame}
+
+% ==================== VISUAL: PRODUCT ====================
+\begin{frame}[t]{A Longer Continuation Has a Smaller Probability}
+\vspace{3mm}
+\begin{center}
+\begin{tikzpicture}
+  \fill[mlblue] (0, 0.6) rectangle ++(1.8, 3.0);
+  \fill[mlblue!30] (4.2, 0.6) rectangle ++(1.8, 3.0);
+  \fill[mlblue] (4.2, 0.6) rectangle ++(1.8, 1.5);
+  \fill[mlblue!30] (8.4, 0.6) rectangle ++(1.8, 3.0);
+  \fill[mlblue!60] (8.4, 0.6) rectangle ++(1.8, 1.5);
+  \fill[mlblue] (8.4, 0.6) rectangle ++(0.9, 1.5);
+  \foreach \x in {0, 4.2, 8.4} \draw[thick, mlpurple] (\x, 0.6) rectangle ++(3.0, 3.0);
+  \node[font=\small] at (1.5, 0.25) {after $w_1$: $P = p_1$};
+  \node[font=\small] at (5.7, 0.25) {after $w_2$: $P = p_1 p_2$};
+  \node[font=\small] at (9.9, 0.25) {after $w_3$: $P = p_1 p_2 p_3$};
+  \draw[->, thick, mlgray] (0, -0.3) -- (11.4, -0.3);
+  \node[font=\small, anchor=north] at (5.7, -0.4) {longer continuation, smaller probability $P$: the dark area};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{With each token, $P$ is multiplied by a fraction.}
+\note{0.5 min. Each square has area one. The dark area is $P$: after $w_1$, the share $p_1$; after $w_2$, the share $p_2$ of that strip; after $w_3$, a share of it again. With every token the dark area is smaller. Then the product in symbols, with its logarithm.}
 \end{frame}
 
 % ==================== CONCEPT: PRODUCT ====================
@@ -280,6 +431,42 @@ A \textbf{continuation} $w_1, \dots, w_n$ of the context $c$ has the probability
 \note{2 min. Each factor is a softmax probability after a longer context: the context grows by one token per step. Ask why $\log P$ is used: a product of many small numbers is below the smallest floating-point number, a sum of logarithms is within range. The first factor alone has little information on $P$; part 5 has a case.}
 \end{frame}
 
+% ==================== VISUAL: RULES ====================
+\begin{frame}[t]{Search, Sampling}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \foreach \x/\h in {0/0.9, 0.3/0.6, 0.6/0.4, 0.9/0.28, 1.2/0.18}
+    \fill[mlblue] (4.9 + \x, 3.4) rectangle ++(0.22, \h);
+  \node[font=\small, anchor=west] at (6.5, 3.75) {distribution $p$};
+  \draw[thick, mlpurple] (5.2, 3.3) -- (2.6, 2.45);
+  \draw[thick, mlpurple] (5.8, 3.3) -- (8.4, 2.45);
+  \draw[thick, mlpurple] (1.55, 2.05) circle (0.22);
+  \draw[line width=2pt, mlpurple] (1.71, 1.89) -- (1.92, 1.68);
+  \node[font=\small\bfseries, text=mlpurple, anchor=west] at (2.15, 2.0) {search};
+  \draw[thick, mlorange, rounded corners=2pt] (7.35, 1.78) rectangle ++(0.5, 0.5);
+  \foreach \d in {0.13, 0.25, 0.37} \fill[mlorange] (7.35 + \d, 1.78 + \d) circle (1.3pt);
+  \node[font=\small\bfseries, text=mlorange, anchor=west] at (8.0, 2.0) {sampling};
+  \foreach \y/\r in {1.1/first run, 0.55/second run} {
+    \node[font=\small, anchor=east] at (0.9, \y) {\r};
+    \node[font=\small, anchor=east] at (6.8, \y) {\r};
+  }
+  \foreach \s/\w in {0/0.55, 0.63/0.35, 1.06/0.6, 1.74/0.4, 2.22/0.5, 2.8/0.45} {
+    \fill[mlpurple!45] (1.0 + \s, 0.95) rectangle ++(\w, 0.3);
+    \fill[mlpurple!45] (1.0 + \s, 0.4) rectangle ++(\w, 0.3);
+    \fill[mlorange!60] (6.9 + \s, 0.95) rectangle ++(\w, 0.3);
+  }
+  \foreach \s/\w/\tint in {0/0.25/100, 0.33/0.9/45, 1.31/0.3/100, 1.69/0.95/45, 2.72/0.5/100}
+    \fill[mlred!\tint!mlorange] (6.9 + \s, 0.4) rectangle ++(\w, 0.3);
+  \node[font=\small] at (2.6, -0.05) {one text};
+  \node[font=\small] at (8.5, -0.05) {two texts};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under a decoding rule, the next token is found by a search or drawn at random.}
+\note{0.5 min. A lens for a search, a die for a draw. Under search, the first run and the second run have one text; under sampling, the second text differs from the first. Then the five rules, sorted into the two kinds.}
+\end{frame}
+
 % ==================== CONCEPT: RULES ====================
 \begin{frame}[t]{Decoding Rules: Search, Sampling}
 \begin{columns}[T]
@@ -305,6 +492,19 @@ A \textbf{decoding rule} is a map from the distribution $p$ at a step to the nex
 \note{2 min. Ask the room which kind is behind the two answers of the scenario: sampling. In machine translation, beam search is the common rule, since one output is wanted. The four rules of sampling share one step: a draw from $q$.}
 \end{frame}
 
+% ==================== OVERVIEW 2 ====================
+\gdef\footpart{\lpname{2}}
+\begin{frame}[t]{One Distribution, Five Decoding Rules}
+\vspace{12mm}
+\begin{center}
+\overview{2}
+\end{center}
+
+\bottomnote{One next-token distribution is the input of all five decoding rules.}
+\note{0.5 min. The first picture is grey with a check: the softmax of the scores gives the distribution $p$. Ahead, in orange, greedy decoding: the likeliest token at every step, with no draw. Three pictures to its right are still ahead.}
+\end{frame}
+\gdef\footpart{}
+
 \section{Greedy Decoding}
 
 % ==================== CONTENTS 2 ====================
@@ -312,6 +512,26 @@ A \textbf{decoding rule} is a map from the distribution $p$ at a step to the nex
 \begin{frame}[t,label=part2]{Greedy Decoding}
 \contentslist{2}
 \note{0.5 min. Read goal 2 aloud. Greedy decoding is the rule with no parameter and no draw.}
+\end{frame}
+
+% ==================== VISUAL: GREEDY ====================
+\begin{frame}[t]{Greedy Decoding: the Tallest Bar}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[mlgray] (-0.3, 0.4) -- (6.3, 0.4);
+  \foreach \x/\h in {0/1.5, 2.0/0.9, 3.0/2.0, 4.0/0.5, 5.0/0.3}
+    \fill[mlblue] (\x, 0.4) rectangle ++(0.7, \h);
+  \fill[mlorange] (1.0, 0.4) rectangle ++(0.7, 3.0);
+  \draw[->, very thick, mlorange] (1.35, 4.4) -- (1.35, 3.55);
+  \node[font=\small\bfseries, text=mlorange, anchor=west] at (1.6, 4.2) {tallest bar: the next token};
+  \node[font=\small] at (3.0, 0.05) {tokens};
+  \node[font=\small, text=mlgray, anchor=east] at (6.3, -0.3) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under greedy decoding, there is no draw: the token of the tallest bar is appended.}
+\note{0.5 min. One bar per token. Under greedy decoding, the orange bar is appended, with no draw: on every run, the same token. Ask the room for the next step: a new set of bars after the longer text, and again the tallest one. Then the rule as a formula.}
 \end{frame}
 
 % ==================== CONCEPT: GREEDY ====================
@@ -339,6 +559,30 @@ Under \textbf{greedy decoding}, the next token is the token with the largest pro
 \note{2 min. Ask the room to run greedy decoding twice in their heads: the same text both times. The orange bar is the appended token. The most probable token at each step can differ from the most probable continuation; the beam search part has the condition.}
 \end{frame}
 
+% ==================== VISUAL: LOOP ====================
+\begin{frame}[t]{One Phrase Repeated}
+\vspace{10mm}
+\begin{center}
+\begin{tikzpicture}
+  \fill[mlgray!40] (0, 1.0) rectangle ++(0.7, 0.45);
+  \fill[mlgray!40] (0.8, 1.0) rectangle ++(0.5, 0.45);
+  \node[font=\small, text=mlgray] at (0.65, 0.55) {text};
+  \foreach \x in {1.6, 4.9, 8.2} {
+    \fill[mllavender4, rounded corners] (\x - 0.1, 0.85) rectangle ++(3.1, 0.75);
+    \foreach \dx/\w in {0/0.7, 0.8/0.5, 1.4/0.8, 2.3/0.6}
+      \fill[mlblue] (\x + \dx, 1.0) rectangle ++(\w, 0.45);
+    \node[font=\small, text=mlpurple] at (\x + 1.45, 0.55) {phrase};
+  }
+  \node[font=\large] at (11.6, 1.2) {\dots};
+  \draw[->, very thick, mlorange] (11.1, 1.75) .. controls (10.6, 3.2) and (8.8, 3.2) .. (8.25, 1.75);
+  \node[font=\small\bfseries, text=mlorange] at (9.7, 3.25) {repeated again and again};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under greedy decoding, the end of a text can be a loop of one phrase.}
+\note{0.5 min. The grey blocks are the text before the loop; each blue group is one copy of a phrase. Ask the room whether they have seen such an ending in a generated text. Then the question on the probability of each copy, with one minute to think.}
+\end{frame}
+
 % ==================== DISCOVERY REVEAL: LOOP ====================
 \begin{frame}[t]{Probability of a Repeated Phrase}
 \begin{columns}[T]
@@ -361,6 +605,19 @@ Each copy of the phrase is added to the context. With every copy, does the proba
 \note{2.5 min. Give the room one minute. Holtzman et al. (2020) found the rise for most phrases they tested with GPT-2. Under greedy decoding the loop has no exit: after a copy, the likeliest token is the start of the next copy. Part 6 has six copies of one sentence after one prompt.}
 \end{frame}
 
+% ==================== OVERVIEW 3 ====================
+\gdef\footpart{\lpname{3}}
+\begin{frame}[t]{One Distribution, Five Decoding Rules}
+\vspace{12mm}
+\begin{center}
+\overview{3}
+\end{center}
+
+\bottomnote{One next-token distribution is the input of all five decoding rules.}
+\note{0.5 min. Two pictures are grey with a check: the distribution, greedy decoding. Ahead, in orange, temperature: the first rule with a random draw, from a distribution made more peaked or flatter than $p$.}
+\end{frame}
+\gdef\footpart{}
+
 \section{Temperature}
 
 % ==================== CONTENTS 3 ====================
@@ -368,6 +625,37 @@ Each copy of the phrase is added to the context. With every copy, does the proba
 \begin{frame}[t,label=part3]{Temperature}
 \contentslist{3}
 \note{0.5 min. Read goal 3 aloud. With temperature, the first rule of sampling, a token is drawn at random.}
+\end{frame}
+
+% ==================== VISUAL: TEMPERATURE ====================
+\begin{frame}[t]{Temperature From Peaked to Flat}
+\vspace{3mm}
+\begin{center}
+\begin{tikzpicture}
+  \fill[mlred] (0.3, 0.6) rectangle (0.5, 3.9);
+  \fill[mlred] (0.4, 0.35) circle (0.33);
+  \draw[thick, mlpurple, rounded corners=4pt] (0.2, 0.62) -- (0.2, 4.4) -- (0.6, 4.4) -- (0.6, 0.62);
+  \draw[thick, mlpurple] (0.4, 0.35) circle (0.33);
+  \node[font=\small, text=mlpurple, rotate=90] at (-0.3, 2.5) {temperature $T$};
+  \foreach \y/\lab in {3.6/{hot, $T > 1$}, 2.2/{$T = 1$}, 0.8/{cold, $T < 1$}} {
+    \draw[thick, mlpurple] (0.6, \y) -- (0.9, \y);
+    \node[font=\small, anchor=west] at (1.0, \y) {\lab};
+  }
+  \foreach \i/\h in {0/0.95, 1/0.12, 2/0.07, 3/0.05, 4/0.03, 5/0.02, 6/0.02, 7/0.01}
+    \fill[mlblue] (3.5 + 0.42 * \i, 0.35) rectangle ++(0.32, \h);
+  \foreach \i/\h in {0/0.75, 1/0.42, 2/0.28, 3/0.18, 4/0.12, 5/0.08, 6/0.06, 7/0.04}
+    \fill[mlblue] (3.5 + 0.42 * \i, 1.75) rectangle ++(0.32, \h);
+  \foreach \i/\h in {0/0.36, 1/0.33, 2/0.31, 3/0.29, 4/0.27, 5/0.25, 6/0.24, 7/0.22}
+    \fill[mlblue] (3.5 + 0.42 * \i, 3.15) rectangle ++(0.32, \h);
+  \foreach \y in {0.35, 1.75, 3.15} \draw[mlgray] (3.4, \y) -- (6.9, \y);
+  \node[font=\small\bfseries, anchor=west] at (7.2, 0.8) {peaked};
+  \node[font=\small\bfseries, anchor=west] at (7.2, 3.6) {flat};
+  \node[font=\small, text=mlgray, anchor=east] at (8.2, -0.2) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{A low temperature gives a peaked distribution, a high temperature a flat one.}
+\note{0.5 min. Cold at the bottom, hot at the top. At a low temperature, most of the mass is on the first bar; at a high temperature, the bars are close to equal. The order of the bars is the same in every row. Then the formula: the scores divided by $T$.}
 \end{frame}
 
 % ==================== CONCEPT: TEMPERATURE ====================
@@ -395,6 +683,27 @@ Under \textbf{sampling}, the next token is drawn at random from a distribution $
 \note{2 min. Ask why the order is the same: $z_i / T > z_j / T$ for $z_i > z_j$ and every positive $T$. The ratio of two probabilities is $p_i^{(T)} / p_j^{(T)} = e^{(z_i - z_j)/T}$: below $T = 1$ it is larger than at $T = 1$, above $T = 1$ closer to 1.}
 \end{frame}
 
+% ==================== VISUAL: LIMITS ====================
+\begin{frame}[t]{Two Ends of the Temperature Scale}
+\vspace{8mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[<->, line width=1.5pt, mlpurple] (0, 2.6) -- (11, 2.6);
+  \node[font=\small, text=mlpurple] at (5.5, 2.95) {temperature scale, two ends};
+  \node[font=\small\bfseries, anchor=north] at (1.1, 2.45) {$T \to 0$};
+  \node[font=\small\bfseries, anchor=north] at (9.9, 2.45) {$T \to \infty$};
+  \foreach \x in {0, 8.8} {
+    \draw[thick, mlpurple, rounded corners] (\x, 0) rectangle ++(2.2, 1.7);
+    \draw[mlgray] (\x + 0.2, 0.3) -- ++(1.8, 0);
+    \node[font=\Huge, text=mlorange] at (\x + 1.1, 1.0) {?};
+  }
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{At each end of the temperature scale, the distribution has a limit.}
+\note{0.5 min. One scale, two ends. Ask the room to sketch in the left box the bars at a temperature near zero, in the right box the bars at a temperature without bound. Keep the sketches for the discovery on the two limits.}
+\end{frame}
+
 % ==================== DISCOVERY REVEAL: LIMITS ====================
 \begin{frame}[t]{Two Limits of the Temperature}
 \begin{columns}[T]
@@ -415,6 +724,27 @@ Which distribution is $p^{(T)}$ as $T \to 0$, which as $T \to \infty$?
 
 \bottomnote{At $T \to 0$, sampling equals greedy decoding; at $T \to \infty$, every token has probability $1/|V|$.}
 \note{2.5 min. One minute for the room. For $T \to 0$: the ratio $e^{(z_{\max} - z_i)/T}$ grows without bound for every other token. For $T \to \infty$, a draw is a token picked uniformly at random, and the text is a list of unrelated tokens.}
+\end{frame}
+
+% ==================== VISUAL: ENTROPY ====================
+\begin{frame}[t]{Entropy From One Sure Token to All Tokens Equal}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[mlgray] (-0.2, 0.9) -- (2.6, 0.9);
+  \fill[mlblue] (0.2, 0.9) rectangle ++(0.5, 3.2);
+  \foreach \x in {0.9, 1.3, 1.7, 2.1} \fill[mlblue] (\x, 0.9) rectangle ++(0.25, 0.04);
+  \node[font=\small, align=center] at (1.2, 0.3) {one sure token\\$H = 0$};
+  \draw[->, very thick, mlpurple] (3.4, 2.2) -- node[above, font=\small\bfseries] {entropy} (6.0, 2.2);
+  \draw[mlgray] (6.6, 0.9) -- (11.4, 0.9);
+  \foreach \i in {0,...,11} \fill[mlblue] (6.8 + 0.38 * \i, 0.9) rectangle ++(0.28, 0.7);
+  \node[font=\small, align=center] at (9.0, 0.3) {all tokens equal\\$H = \log |V|$};
+  \node[font=\small, text=mlgray, anchor=east] at (11.4, -0.35) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{The entropy is 0 when one token is sure, largest when all tokens are equal.}
+\note{0.5 min. On the left, one token has all the mass: the next token is known before the draw. On the right, every token has the same probability. The entropy $H$ is one number for the place of a distribution between the two pictures. Then its formula.}
 \end{frame}
 
 % ==================== CONCEPT: ENTROPY ====================
@@ -441,6 +771,19 @@ The \textbf{entropy} of a distribution $p$ is $H(p) = -\sum_i p_i \log p_i$, in 
 \note{2 min. $e^{H}$ is the number of equally likely tokens with the same entropy: at $H = \log |V|$ it is $|V|$. The numerator of the derivative is the variance of the scores under $p^{(T)}$, so the derivative is zero only when all scores are equal.}
 \end{frame}
 
+% ==================== OVERVIEW 4 ====================
+\gdef\footpart{\lpname{4}}
+\begin{frame}[t]{One Distribution, Five Decoding Rules}
+\vspace{12mm}
+\begin{center}
+\overview{4}
+\end{center}
+
+\bottomnote{One next-token distribution is the input of all five decoding rules.}
+\note{0.5 min. Three pictures are grey with a check: the distribution, greedy decoding, temperature. Ahead, in orange, top-k and top-p: two cuts of the distribution, made before the draw. The dashed line in the picture is the cut.}
+\end{frame}
+\gdef\footpart{}
+
 \section{Top-k, Top-p}
 
 % ==================== CONTENTS 4 ====================
@@ -448,6 +791,28 @@ The \textbf{entropy} of a distribution $p$ is $H(p) = -\sum_i p_i \log p_i$, in 
 \begin{frame}[t,label=part4]{Top-k, Top-p}
 \contentslist{4}
 \note{0.5 min. Read goal 4 aloud. Top-k, top-p are cuts: the unlikely tokens are removed before the draw.}
+\end{frame}
+
+% ==================== VISUAL: TOP-K ====================
+\begin{frame}[t]{Top-k: a Cut After k Tokens}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[mlgray] (-0.2, 0.6) -- (8.4, 0.6);
+  \foreach \i/\h in {0/3.0, 1/2.0, 2/1.4, 3/1.0}
+    \fill[mlblue] (0.85 * \i, 0.6) rectangle ++(0.6, \h);
+  \foreach \i/\h in {4/0.75, 5/0.55, 6/0.4, 7/0.3, 8/0.22, 9/0.15}
+    \fill[mlgray!50] (0.85 * \i, 0.6) rectangle ++(0.6, \h);
+  \draw[dashed, very thick, mlorange] (3.27, 0.3) -- (3.27, 3.9);
+  \node[font=\small\bfseries, text=mlorange] at (3.27, 4.15) {top-k cut};
+  \node[font=\small] at (1.3, 0.25) {kept: $k$ tokens};
+  \node[font=\small, text=mlgray] at (5.95, 0.25) {cut};
+  \node[font=\small, text=mlgray, anchor=east] at (8.4, -0.15) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under top-k, every token after the $k$-th is cut.}
+\note{0.5 min. The bars are in order, the likeliest first. Under top-k, the cut lies after the $k$-th bar; the grey bars are left out of the draw. Ask where the line lies when $k$ equals the size of the vocabulary: after the last bar, with nothing cut.}
 \end{frame}
 
 % ==================== CONCEPT: TOP-K ====================
@@ -475,6 +840,31 @@ Under \textbf{top-k} sampling, the set $S_k$ of the $k$ likeliest tokens is kept
 \note{2 min. Ask what is lost: the mass $1 - M_k$ of the cut tokens. The divergence of $q$ from $p$ is $\mathrm{KL}(q \parallel p) = -\log M_k$ (Appendix A3). Fan et al. (2018) introduced top-k sampling for story generation.}
 \end{frame}
 
+% ==================== VISUAL: TOP-P ====================
+\begin{frame}[t]{Top-p: a Fill Line at Mass $\pi$}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \fill[mlblue] (0.1, 0.1) rectangle (2.9, 1.5);
+  \fill[mlblue!80] (0.1, 1.55) rectangle (2.9, 2.45);
+  \fill[mlblue!65] (0.1, 2.5) rectangle (2.9, 3.1);
+  \fill[mlblue!50] (0.1, 3.15) rectangle (2.9, 3.6);
+  \draw[line width=1.5pt, mlpurple] (0, 4.3) -- (0, 0) -- (3.0, 0) -- (3.0, 4.3);
+  \draw[dashed, very thick, mlorange] (-0.4, 3.3) -- (3.4, 3.3);
+  \node[font=\small\bfseries, text=mlorange, anchor=west] at (3.5, 3.3) {top-p: fill line at mass $\pi$};
+  \draw[->, thick, mlgray] (3.5, 0.8) -- (3.0, 0.8);
+  \node[font=\small, anchor=west] at (3.55, 0.8) {likeliest token first};
+  \foreach \x/\h in {7.4/0.35, 8.0/0.25, 8.6/0.18, 9.2/0.12, 9.8/0.08}
+    \fill[mlgray!50] (\x, 0.1) rectangle ++(0.45, \h);
+  \node[font=\small, text=mlgray] at (8.8, 0.85) {set aside};
+  \node[font=\small, text=mlgray, anchor=east] at (10.3, -0.25) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under top-p, the line $\pi$ is fixed; the number of tokens up to it depends on $p$.}
+\note{0.5 min. Tokens as blocks, the likeliest at the bottom, each block as high as its probability. Blocks are put in the glass until the line $\pi$ is reached; the block across the line is kept. The blocks above the line are set aside before the draw.}
+\end{frame}
+
 % ==================== CONCEPT: TOP-P ====================
 \begin{frame}[t]{Top-p: the Smallest Set With Mass $\pi$}
 \begin{columns}[T]
@@ -499,6 +889,29 @@ Under \textbf{top-p} sampling, or nucleus sampling, the kept set is the smallest
 \note{2 min. Holtzman et al. (2020) introduced nucleus sampling. Ask how many tokens are kept when one token alone has a mass above $\pi$: one, and the draw is greedy decoding. The bound $\mathrm{KL}(q \parallel p) \le -\log \pi$ is valid after every prompt (Appendix A3).}
 \end{frame}
 
+% ==================== VISUAL: PEAKED, FLAT ====================
+\begin{frame}[t]{A Peaked, a Flat Distribution}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[mlgray] (-0.2, 0.6) -- (4.6, 0.6);
+  \foreach \i/\h in {0/3.2, 1/0.35, 2/0.22, 3/0.15, 4/0.1, 5/0.08, 6/0.06, 7/0.05}
+    \fill[mlblue] (0.55 * \i, 0.6) rectangle ++(0.4, \h);
+  \node[font=\small\bfseries] at (2.1, 0.2) {peaked distribution};
+  \draw[mlgray] (6.2, 0.6) -- (12.2, 0.6);
+  \foreach \i in {0,...,13} {
+    \pgfmathsetmacro{\hh}{0.62 - 0.015 * \i}
+    \fill[mlblue] (6.4 + 0.42 * \i, 0.6) rectangle ++(0.3, \hh);
+  }
+  \node[font=\small\bfseries] at (9.2, 0.2) {flat distribution};
+  \node[font=\small, text=mlgray, anchor=east] at (12.2, -0.2) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{A peaked distribution has most of its mass on one token; a flat one has it on many tokens.}
+\note{0.5 min. Two shapes: on the left, one bar has most of the mass; on the right, the mass is spread over many bars. Keep both shapes in mind: in the discovery, one $k$ and one $\pi$ are put on each.}
+\end{frame}
+
 % ==================== DISCOVERY REVEAL: PEAKED, FLAT ====================
 \begin{frame}[t]{Fixed k Against Fixed $\pi$ on Two Distributions}
 \begin{columns}[T]
@@ -521,6 +934,19 @@ One $k$, one $\pi$ for both. Under top-$k$, after which distribution is the cut 
 \note{2.5 min. One minute for the room. In the second chart, $k$ is the dashed line. With one $k$, tokens of near-zero probability are kept after the peaked distribution, and likely tokens are cut after the flat one. Part 6 has the numbers of GPT-2 small after a peaked, a flat prompt.}
 \end{frame}
 
+% ==================== OVERVIEW 5 ====================
+\gdef\footpart{\lpname{5}}
+\begin{frame}[t]{One Distribution, Five Decoding Rules}
+\vspace{12mm}
+\begin{center}
+\overview{5}
+\end{center}
+
+\bottomnote{One next-token distribution is the input of all five decoding rules.}
+\note{0.5 min. Four pictures are grey with a check. Ahead, in orange, beam search: the second search rule, with several partial continuations at each step. In the picture, two paths are drawn thick at each step.}
+\end{frame}
+\gdef\footpart{}
+
 \section{Beam Search}
 
 % ==================== CONTENTS 5 ====================
@@ -528,6 +954,35 @@ One $k$, one $\pi$ for both. Under top-$k$, after which distribution is the cut 
 \begin{frame}[t,label=part5]{Beam Search}
 \contentslist{5}
 \note{0.5 min. Read goal 5 aloud. Beam search is the second search rule: several partial continuations are compared at each step.}
+\end{frame}
+
+% ==================== VISUAL: BEAM ====================
+\begin{frame}[t]{Beam Search: B Paths Kept at Each Step}
+\vspace{3mm}
+\begin{center}
+\begin{tikzpicture}[nd/.style={circle, inner sep=0pt, minimum size=7pt}]
+  \coordinate (r) at (0, 2.2);
+  \coordinate (a) at (3, 3.6); \coordinate (b) at (3, 2.2); \coordinate (c) at (3, 0.8);
+  \coordinate (a1) at (6, 4.1); \coordinate (a2) at (6, 3.3); \coordinate (b1) at (6, 2.5); \coordinate (b2) at (6, 1.7);
+  \coordinate (a11) at (9, 4.4); \coordinate (a12) at (9, 3.85); \coordinate (b11) at (9, 2.8); \coordinate (b12) at (9, 2.25);
+  \draw[thick, mlgray!60] (r) -- (c);
+  \draw[thick, mlgray!60] (a) -- (a2);
+  \draw[thick, mlgray!60] (b) -- (b2);
+  \draw[thick, mlgray!60] (a1) -- (a11);
+  \draw[thick, mlgray!60] (b1) -- (b12);
+  \draw[line width=2.2pt, mlblue] (r) -- (a) -- (a1) -- (a12);
+  \draw[line width=2.2pt, mlblue] (r) -- (b) -- (b1) -- (b11);
+  \foreach \p in {a, b, a1, b1, a12, b11} \node[nd, fill=mlblue] at (\p) {};
+  \foreach \p in {c, a2, b2, a11, b12} \node[nd, fill=mlgray!60] at (\p) {};
+  \node[circle, draw=mlpurple, fill=mllavender4, font=\small, minimum size=0.6cm] at (r) {$c$};
+  \foreach \x/\s in {3/first, 6/second, 9/third} \node[font=\small, text=mlpurple] at (\x, 4.95) {\s\ step};
+  \node[font=\small, anchor=west, text=mlblue] at (9.6, 1.6) {blue: $B$ paths kept};
+  \node[font=\small, anchor=west, text=mlgray] at (9.6, 1.1) {grey: dropped};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under beam search, $B$ paths are followed at every step; under greedy decoding, one.}
+\note{0.5 min. At each step, the $B$ blue paths are extended; of all their extensions, the $B$ most probable are blue, the rest are grey. Under greedy decoding, a single path is blue. Then the four steps of the search in symbols.}
 \end{frame}
 
 % ==================== STEPS ====================
@@ -555,6 +1010,35 @@ Greedy decoding: one partial continuation, extended by its likeliest token.
 
 \bottomnote{Beam search of width 1 is greedy decoding.}
 \note{3 min. Write the four steps on the board as a loop. At each step, $B \cdot |V|$ extensions are compared, against $|V|$ under greedy decoding. Ask the room for the answer before the second step. Beam search is a search: one prompt gives one text on every run.}
+\end{frame}
+
+% ==================== VISUAL: TREE ====================
+\begin{frame}[t]{Branch Widths in a Two-Step Tree}
+\vspace{3mm}
+\begin{center}
+\begin{tikzpicture}[nd/.style={circle, draw=mlpurple, fill=mllavender4, font=\small, minimum size=0.6cm, inner sep=0pt}]
+  \coordinate (c) at (0, 2.2); \coordinate (a) at (3.6, 3.4); \coordinate (b) at (3.6, 1.0);
+  \draw[line width=6pt, mlblue] (c) -- (a);
+  \draw[line width=1.5pt, mlblue] (c) -- (b);
+  \foreach \y in {4.3, 3.4, 2.5} \draw[line width=1.5pt, mlblue] (a) -- (7.2, \y);
+  \draw[line width=6pt, mlblue] (b) -- (7.2, 1.2);
+  \draw[line width=0.6pt, mlblue] (b) -- (7.2, 0.3);
+  \node[nd] at (c) {$c$};
+  \node[nd] at (a) {$a$};
+  \node[nd] at (b) {$b$};
+  \foreach \y/\lab in {4.3/x_1, 3.4/x_2, 2.5/x_3} \node[nd] at (7.2, \y) {$\lab$};
+  \node[nd] at (7.2, 1.2) {$y$};
+  \node[nd] at (7.2, 0.3) {$y'$};
+  \node[font=\small, anchor=west] at (7.7, 3.4) {mass spread};
+  \node[font=\small, anchor=west] at (7.7, 1.2) {mass on one token};
+  \node[font=\small, text=mlpurple] at (1.8, 4.9) {first step};
+  \node[font=\small, text=mlpurple] at (5.4, 4.9) {second step};
+  \node[font=\small\bfseries, anchor=west, text=mlpurple] at (7.7, 4.9) {two-step tree: branch width, probability};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{In the tree, the width of a branch is its probability.}
+\note{0.5 min. The width of each branch is its probability. From $c$, the branch to $a$ is wide, the branch to $b$ narrow. After $a$, three narrow branches; after $b$, one wide branch to $y$. Then the question on the two paths, with one minute for the room.}
 \end{frame}
 
 % ==================== DISCOVERY REVEAL: TREE ====================
@@ -602,6 +1086,35 @@ Under which condition is the path $b\,y$ more probable than every path starting 
 \note{2.5 min. One minute for the room. The condition has two sides: the first factor of $a$ is larger, the second factor of $b$ is larger. Ask for the smallest $B$ with $b\,y$ as the result: $B = 2$, since $b$ is the second likeliest first token. Part 6 has the case with the numbers of GPT-2 small.}
 \end{frame}
 
+% ==================== VISUAL: BEAM WIDTH ====================
+\begin{frame}[t]{Beam Width B From 1 Upward}
+\vspace{3mm}
+\begin{center}
+\begin{tikzpicture}[nd/.style={circle, inner sep=0pt, minimum size=5pt}]
+  \draw[->, line width=1.5pt, mlpurple] (0, 4.2) -- (10.5, 4.2);
+  \node[font=\small, text=mlpurple, anchor=west] at (10.6, 4.2) {upward};
+  \node[font=\small\bfseries, text=mlpurple, anchor=south west] at (0, 4.45) {beam width $B$};
+  \fill[mlorange] (1.6, 4.2) circle (4pt);
+  \node[font=\small, anchor=north] at (1.6, 4.0) {$B = 1$};
+  \fill[mlpurple] (7.2, 4.2) circle (4pt);
+  \node[font=\small, anchor=north] at (7.2, 4.0) {a larger $B$};
+  \foreach \x/\lit in {0/1, 5.6/2} {
+    \foreach \y in {3.0, 2.3, 1.6, 0.9} \draw[thick, mlgray!50] (\x, 1.95) -- (\x + 1.6, \y);
+    \draw[thick, mlgray!50] (\x + 1.6, 3.0) -- (\x + 3.2, 2.82);
+    \draw[line width=2pt, mlblue] (\x, 1.95) -- (\x + 1.6, 3.0) -- (\x + 3.2, 3.18);
+    \fill[mlpurple] (\x, 1.95) circle (3pt);
+  }
+  \draw[thick, mlgray!50] (7.2, 2.3) -- (8.8, 2.12);
+  \draw[line width=2pt, mlblue] (5.6, 1.95) -- (7.2, 2.3) -- (8.8, 2.48);
+  \node[font=\small] at (1.6, 0.4) {one lit path};
+  \node[font=\small] at (7.2, 0.4) {more lit paths};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{The beam width $B$ is a whole number, at least 1.}
+\note{0.5 min. On the left, one lit path: beam search at $B = 1$. On the right, at a larger $B$, more paths are lit at each step. Keep the two trees in mind for the two checkpoint questions, one minute each.}
+\end{frame}
+
 % ==================== CHECKPOINT QUIZ ====================
 \begin{frame}[t]{Checkpoint: Beam Width, Search Result}
 \begin{block}{Checkpoint problem}
@@ -626,6 +1139,27 @@ Beam search of width $B$ over $V$, $n$ steps after a context $c$.
 \note{3 min. One minute per question. For question 1, the worst case: the most probable path starts with the least likely first token. For question 2, part 6 has $\log P$ at $B = 1$ above $\log P$ at $B = 2$ after one prompt. An exact search over $n$ steps has $|V|^n$ paths.}
 \end{frame}
 
+% ==================== VISUAL: PARAMETERS ====================
+\begin{frame}[t]{Five Rules, Four Parameters}
+\vspace{8mm}
+\begin{center}
+\begin{tikzpicture}
+  \foreach \i/\ovpic/\nm/\prm in {0/\picgreedy/greedy decoding/none, 1/\pictemp/temperature/$T$, 2/\piccut/top-k/$k$, 3/\pictopp/top-p/$\pi$, 4/\picbeam/beam search/$B$} {
+    \begin{scope}[shift={({2.45 * \i}, 0)}]
+      \draw[rounded corners, mlpurple] (-0.15, -0.25) rectangle (2.15, 1.6);
+      \ovpic{mlpurple}
+      \node[font=\small] at (1.0, -0.6) {\nm};
+      \node[font=\large\bfseries, text=mlorange] at (1.0, -1.35) {\prm};
+    \end{scope}}
+  \node[font=\small\bfseries, text=mlpurple, anchor=east] at (-0.35, 0.65) {five rules};
+  \node[font=\small\bfseries, text=mlpurple, anchor=east] at (-0.35, -1.35) {four parameters};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Greedy decoding has no parameter; each other rule has one.}
+\note{0.5 min. One picture per rule, with its parameter under it: none for greedy decoding, $T$ for temperature, $k$ for top-k, $\pi$ for top-p, $B$ for beam search. Then the table: six aspects of the same five rules.}
+\end{frame}
+
 % ==================== COMPARISON ====================
 \begin{frame}[t]{Five Decoding Rules in Six Aspects}
 Six aspects of the five decoding rules, at one step:
@@ -648,6 +1182,36 @@ Equal to greedy decoding at & every setting & $T \to 0$ & $k = 1$ & $\pi \to 0$ 
 
 \bottomnote{Greedy decoding is a limit of each of the four other rules.}
 \note{2 min. Read the last row: each rule has a setting equal to greedy decoding. The sampling rules are chained: temperature first, then top-k or top-p, as in Hugging Face transformers. Ask which row separates top-k from top-p: the number kept.}
+\end{frame}
+
+% ==================== VISUAL: TASKS ====================
+\begin{frame}[t]{Three Tasks, Three Decoding Rules}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}[rl/.style={rectangle, rounded corners, draw=mlpurple, fill=mllavender3, font=\small\bfseries, minimum width=3.9cm, minimum height=0.7cm}, ar/.style={->, very thick, mlpurple}]
+  \node[font=\small\bfseries, text=mlpurple] at (1.7, 4.2) {three tasks};
+  \node[font=\small\bfseries, text=mlpurple] at (8.7, 4.2) {three decoding rules};
+  \node[draw=mlpurple, rounded corners, font=\small\bfseries, minimum width=1.4cm] at (0.4, 3.2) {DE $\rightarrow$ EN};
+  \node[font=\small, anchor=west] at (1.4, 3.2) {translation};
+  \draw[ar] (3.6, 3.2) -- (6.5, 3.2);
+  \node[rl] at (8.7, 3.2) {beam search};
+  \draw[thick, mlpurple, fill=white] (-0.2, 1.65) -- (0.4, 1.8) -- (1.0, 1.65) -- (1.0, 2.3) -- (0.4, 2.45) -- (-0.2, 2.3) -- cycle;
+  \draw[thick, mlpurple] (0.4, 1.8) -- (0.4, 2.45);
+  \node[font=\small, anchor=west] at (1.4, 2.05) {story};
+  \draw[ar] (3.6, 2.05) -- (6.5, 2.05);
+  \node[rl] at (8.7, 2.05) {top-p with temperature $T$};
+  \draw[thick, mlpurple] (0.4, 0.85) circle (0.32);
+  \draw[thick, mlpurple] (0.4, 1.17) -- (0.4, 1.3);
+  \draw[thick, mlpurple] (0.28, 1.3) -- (0.52, 1.3);
+  \draw[thick, mlorange] (0.4, 0.85) -- (0.56, 1.0);
+  \node[font=\small, anchor=west] at (1.4, 0.85) {quick test};
+  \draw[ar] (3.6, 0.85) -- (6.5, 0.85);
+  \node[rl] at (8.7, 0.85) {greedy decoding};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{A translation, a story, a quick test: each task has its decoding rule.}
+\note{0.5 min. Three tasks: a translation with one correct output, a story told anew on each run, a quick test of a prompt. At the end of each arrow, the rule for the task. Then the two questions on the way from a task to its rule.}
 \end{frame}
 
 % ==================== DECISION FLOWCHART ====================
@@ -675,6 +1239,19 @@ Equal to greedy decoding at & every setting & $T \to 0$ & $k = 1$ & $\pi \to 0$ 
 \note{2 min. Put two tasks to the room: a German sentence into English, with beam search; a bedtime story told twice, with top-p and a temperature, so that each run differs. A quick test of a prompt, with one text: greedy decoding.}
 \end{frame}
 
+% ==================== OVERVIEW 6 ====================
+\gdef\footpart{\lpname{6}}
+\begin{frame}[t]{One Distribution, Five Decoding Rules}
+\vspace{12mm}
+\begin{center}
+\overview{6}
+\end{center}
+
+\bottomnote{One next-token distribution is the input of all five decoding rules.}
+\note{0.5 min. All five pictures in orange: in the Worked Example, each of them is computed on the numbers of GPT-2 small, mostly after one prompt, the first words of Pride and Prejudice. For top-k and top-p, two more prompts are added.}
+\end{frame}
+\gdef\footpart{}
+
 \section{Worked Example: GPT-2 Small}
 
 % ==================== CONTENTS 6 ====================
@@ -682,6 +1259,25 @@ Equal to greedy decoding at & every setting & $T \to 0$ & $k = 1$ & $\pi \to 0$ 
 \begin{frame}[t,label=part6]{Worked Example: GPT-2 Small}
 \contentslist{6}
 \note{0.5 min. Read goal 6 aloud. The three prompts: the Austen prompt; the peaked prompt, The Prime Minister of the United; the flat prompt, I went to the.}
+\end{frame}
+
+% ==================== VISUAL: ONE TOKEN, THE REST ====================
+\begin{frame}[t]{The Token \texttt{the} Against 50,256 Other Tokens}
+\vspace{8mm}
+\begin{center}
+\begin{tikzpicture}
+  \node[font=\small, text=mlpurple, anchor=west] at (0, 3.4) {after the Austen prompt, \textit{It is a truth universally acknowledged that}};
+  \fill[mlorange] (3.4, 2.0) rectangle ++(1.82, 0.7);
+  \node[font=\small, anchor=east] at (3.3, 2.35) {token \texttt{the}};
+  \node[font=\small\bfseries, anchor=west] at (5.3, 2.35) {0.182};
+  \fill[mlblue] (3.4, 0.8) rectangle ++(8.18, 0.7);
+  \node[font=\small, anchor=east] at (3.3, 1.15) {all 50,256 other tokens};
+  \node[font=\small\bfseries, anchor=east, text=white] at (11.45, 1.15) {0.818};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{After the Austen prompt, the likeliest token, \texttt{the}, has less than a fifth of the mass.}
+\note{0.5 min. The two bars add up to 1. The likeliest token, the, has 0.182; the 50,256 other tokens together have 0.818. Under greedy decoding, the orange bar is appended; under sampling at $T = 1$, another token is drawn on most runs.}
 \end{frame}
 
 % ==================== WORKED NUMBERS: TOKENS ====================
@@ -721,6 +1317,25 @@ Five tokens & & 0.278 \\
 \note{1.5 min. The scores are near $-90$; $p$ depends only on their differences. Add the column on the board: $0.182 + 0.038 + 0.025 + 0.019 + 0.014 = 0.278$. Under greedy decoding, \texttt{the} is appended. With 3,784 tokens for 0.9 of the mass, the distribution after this prompt is flat.}
 \end{frame}
 
+% ==================== VISUAL: THREE PIES ====================
+\begin{frame}[t]{Probability of the Token \texttt{the} at Three Temperatures}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \node[font=\small, text=mlpurple] at (5.6, 4.2) {probability of the token \texttt{the} after the Austen prompt, three temperatures};
+  \foreach \x/\p/\T in {1.2/0.885/0.5, 5.6/0.182/1, 10.0/0.005/2} {
+    \fill[mlblue!25] (\x, 2.2) circle (1.3);
+    \fill[mlorange] (\x, 2.2) -- ++(90:1.3) arc[start angle=90, end angle={90 - 360 * \p}, radius=1.3] -- cycle;
+    \draw[mlpurple] (\x, 2.2) circle (1.3);
+    \node[font=\small] at (\x, 0.5) {$T = \T$: \textbf{\p}};
+  }
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{$p(\texttt{the})$ is 0.885 at $T = 0.5$, 0.182 at $T = 1$, 0.005 at $T = 2$.}
+\note{0.5 min. The orange share of each circle is the probability of the token the. At $T = 0.5$ it has most of the circle; at $T = 2$, a sliver. Then the ratio of the two likeliest tokens, computed from their two scores alone.}
+\end{frame}
+
 % ==================== COMPUTATION IN TWO COLUMNS ====================
 \begin{frame}[t]{Ratio of the Two Likeliest Tokens at T = 0.5, 1, 2}
 \begin{columns}[T]
@@ -758,6 +1373,20 @@ Under temperature $T$, the ratio is $p^{(T)}_{\text{the}} / p^{(T)}_{\text{there
 \note{2 min. Compute $e^{3.146}$ on the board: 23.2. For the ratio, two scores suffice; for $p_{\text{the}}$ itself, all 50,257, since the denominator of the softmax is a sum over the vocabulary. The entropies are near the limits of part 3: 0.69 nats is near greedy decoding, 9.88 near the uniform 10.82.}
 \end{frame}
 
+% ==================== VISUAL: THREE SHAPES ====================
+\begin{frame}[t]{Three Prompts, Three Shapes}
+\vspace{3mm}
+\begin{center}
+\includegraphics[width=0.9\textwidth]{images/three_shapes.pdf}
+
+\vspace{2mm}
+{\small The 20 likeliest tokens of GPT-2 small after three prompts: three shapes on one scale.}
+\end{center}
+
+\bottomnote{After the peaked prompt, one token has 0.799; after the flat prompt, the likeliest has 0.033.}
+\note{0.5 min. Left, the peaked prompt: one token, Kingdom, has 0.799 of the mass. Middle, the Austen prompt, with the at 0.182. Right, the flat prompt: no token has more than 0.033, the probability of hospital. Then the mass of top-k, the size of top-p after each prompt.}
+\end{frame}
+
 % ==================== WORKED NUMBERS: TOP-K, TOP-P ====================
 \begin{frame}[t]{Top-k Mass, Top-p Size After Three Prompts}
 \begin{columns}[T]
@@ -789,6 +1418,27 @@ flat & 0.033 & 0.112 & 4{,}797 \\
 
 \bottomnote{At $k = 5$, 0.992 of the mass is kept after the peaked prompt, 0.112 after the flat one.}
 \note{2 min. Read the table by columns: $M_5$ from 0.992 to 0.112, $k^*(0.9)$ from 2 to 4,797. The divergence of top-5 is $-\log 0.112 = 2.19$ nats after the flat prompt, $-\log 0.992 = 0.008$ after the peaked one. In the chart, $k = 5$ is the dotted line, 0.9 the dashed one.}
+\end{frame}
+
+% ==================== VISUAL: FIRST STEP ====================
+\begin{frame}[t]{Two First Tokens After the Austen Prompt}
+\vspace{6mm}
+\begin{center}
+\begin{tikzpicture}[tk/.style={draw=mlpurple, fill=white, rounded corners, font=\small, inner sep=3pt}]
+  \node[draw=mlpurple, fill=mllavender4, rounded corners, font=\small] (c) at (0, 2.0) {Austen prompt};
+  \draw[line width=6pt, mlblue] (c.east) -- (5.0, 3.3);
+  \draw[line width=1.3pt, mlblue] (c.east) -- (5.0, 0.7);
+  \node[tk] (t) at (5.9, 3.3) {\texttt{the} 0.182};
+  \node[tk] (r) at (5.9, 0.7) {\texttt{there} 0.038};
+  \draw[thick, mlgray, dashed] (t.east) -- (9.0, 3.3) node[right, font=\Large, text=mlorange] {?};
+  \draw[thick, mlgray, dashed] (r.east) -- (9.0, 0.7) node[right, font=\Large, text=mlorange] {?};
+  \node[font=\small, text=mlpurple] at (3.4, 4.2) {two first tokens};
+  \node[font=\small, text=mlpurple] at (8.6, 4.2) {second token};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{At the first step, \texttt{the} has 4.8 times the probability of \texttt{there}.}
+\note{0.5 min. Branch width by probability: the wide branch is the, the narrow one there. Under greedy decoding, the narrow branch is dropped at this step. Ask the room for likely second tokens at each question mark. Then the second step: nine paths, three after each of three first tokens.}
 \end{frame}
 
 % ==================== WORKED NUMBERS: TREE ====================
@@ -848,6 +1498,22 @@ Path & $p(w_1)$ & $p(w_2 \mid w_1)$ & $P$ \\
 \note{2 min. Walk through $B = 2$: after step 1, \texttt{the} and \texttt{there} are kept; of their extensions, \texttt{there is} and \texttt{there are} are the two largest. In the tree, the condition of part 5 is met with $a$ = the, $b$ = there, $y$ = is: $0.0159 > 0.0027$. After \texttt{the}, the likeliest second token has 0.01472.}
 \end{frame}
 
+% ==================== VISUAL: SIX LINES ====================
+\begin{frame}[t]{One Sentence Six Times}
+\vspace{5mm}
+\begin{center}
+\begin{tikzpicture}
+  \foreach \i/\s/\first in {1/15/the, 2/32/The, 3/49/The, 4/66/The, 5/83/The, 6/100/The}
+    \node[anchor=west, text=mlblue!\s!mlgray] at (0, 4.0 - 0.62 * \i) {copy \i: \textit{\first\ United States is a nation of immigrants.}};
+  \draw[->, very thick, mlorange] (7.6, 0.3) .. controls (8.8, 1.0) and (8.8, 2.9) .. (7.6, 3.45);
+  \node[font=\small\bfseries, text=mlorange, anchor=west] at (8.7, 1.9) {loop};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under greedy decoding after the Austen prompt, one sentence of GPT-2 small is repeated six times.}
+\note{0.5 min. Each line is one copy of the sentence in the greedy continuation, copy 1 at the top; the darker the line, the later the copy. Ask the room whether the probability of copy 6 lies above or below that of copy 1. Then the six probabilities.}
+\end{frame}
+
 % ==================== WORKED NUMBERS: LOOP ====================
 \begin{frame}[t]{Six Copies of One Sentence Under Greedy Decoding}
 \begin{columns}[T]
@@ -881,6 +1547,32 @@ Copy & Tokens & $P$ \\
 \note{1.5 min. Copy 1 starts with lowercase \texttt{the}, at probability 0.182; from copy 2 on, with \texttt{The}. In copy 6, the first token has probability 0.649. This is the rise of the discovery on the repeated phrase, measured after one prompt.}
 \end{frame}
 
+% ==================== VISUAL: LOG P LINE ====================
+\begin{frame}[t]{Five Values of $\log P$ on One Line}
+\vspace{6mm}
+\begin{center}
+\begin{tikzpicture}[x=0.068cm]
+  \node[font=\small, text=mlpurple] at (-85, 3.6) {five values of log $P$ on one number line, 20 tokens after the Austen prompt};
+  \draw[->, thick, mlpurple] (-178, 1.5) -- (6, 1.5);
+  \foreach \v in {-150, -100, -50, 0} {
+    \draw[mlpurple] (\v, 1.38) -- (\v, 1.62);
+    \node[font=\small, anchor=north] at (\v, 1.3) {$\v$};
+  }
+  \fill[mlred] (-169.60, 1.5) circle (3.5pt);
+  \fill[mlorange] (-61.53, 1.5) circle (3.5pt);
+  \foreach \v in {-27.77, -27.78, -25.14} \fill[mlblue] (\v, 1.5) circle (3.5pt);
+  \node[font=\small, align=center, anchor=south] at (-169.60, 1.75) {$T = 1.5$, draw 0\\$-169.60$};
+  \node[font=\small, align=center, anchor=south east] at (-49, 1.75) {$T = 0.7$, draw 0\\$-61.53$};
+  \node[font=\small, align=center, anchor=south west] at (-44, 1.75) {$B = 1, 2, 5$\\$-27.77$, $-27.78$, $-25.14$};
+  \node[font=\small, text=mlblue] at (-20, 0.45) {three search texts};
+  \node[font=\small, text=mlred] at (-118, 0.45) {two sampled texts};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{The three search texts lie near $-27$; the two sampled texts lie far below.}
+\note{0.5 min. Each dot is one continuation of 20 tokens after the Austen prompt; further right is more probable. The three search texts lie close together; the draw at $T = 0.7$ lies at $-61.53$, the draw at $T = 1.5$ at $-169.60$. Then the five texts.}
+\end{frame}
+
 % ==================== WORKED: TEXTS ====================
 \begin{frame}[t]{Twenty Tokens After the Austen Prompt Under Five Rules}
 Five rules, 20 tokens each after the Austen prompt; $\log P$ is the sum of the 20 log-probabilities of GPT-2 small at $T = 1$.
@@ -902,6 +1594,28 @@ $T = 1.5$, draw 0 & $-169.60$ & WWI and the 1914 Ottoman Imperial Question origi
 \normalsize
 \bottomnote{Over 20 tokens, $\log P$ is $-25.14$ under beam search of width 5 and $-169.60$ for a draw at $T = 1.5$.}
 \note{1.5 min. Read the $\log P$ column from top to bottom. At $B = 2$, $\log P$ is 0.01 below greedy decoding: the second checkpoint question. Another draw at $T = 0.7$ or $1.5$ gives another text; the three search texts are the same on every run.}
+\end{frame}
+
+% ==================== VISUAL: PIPELINE ====================
+\begin{frame}[t]{Scores Through Temperature, Top-k, Top-p}
+\vspace{10mm}
+\begin{center}
+\begin{tikzpicture}[st/.style={rectangle, rounded corners, draw=mlpurple, fill=mllavender4, font=\small, minimum height=1.0cm, align=center}, ar/.style={->, very thick, mlpurple}]
+  \node[st] (z) at (0, 2) {$z$\\50,257 scores};
+  \node[st] (t) at (3.0, 2) {divided by $T$\\temperature};
+  \node[st] (k) at (5.9, 2) {top-k\\cut};
+  \node[st] (p) at (8.4, 2) {top-p\\cut};
+  \node[st, draw=mlorange, text=mlorange, font=\small\bfseries, minimum width=1.0cm] (q) at (10.9, 2) {$q$};
+  \draw[ar] (z) -- (t);
+  \draw[ar] (t) -- (k);
+  \draw[ar] (k) -- (p);
+  \draw[ar] (p) -- (q);
+  \node[font=\small, text=mlpurple] at (5.45, 3.3) {\texttt{next\_token\_dist(z, T, k, top\_p)}};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{In \texttt{next\_token\_dist}, the scores are divided by $T$ first, then cut by top-k, top-p.}
+\note{0.5 min. One function, four steps from left to right: the 50,257 scores, the division by $T$, the cut of top-k, the cut of top-p. At the right end, the distribution $q$ of the draw. Then the call of the function after the flat prompt.}
 \end{frame}
 
 % ==================== PYTHON CODE ====================
@@ -934,6 +1648,26 @@ print((r > 0).sum())                        # 4797
 \note{1.5 min. The function is in the setup cell of the three notebooks. At $T = 1$ no token is drawn: the function gives the distribution. The order of the cuts is that of Hugging Face transformers: temperature, top-k, top-p, min-p.}
 \end{frame}
 
+% ==================== VISUAL: FOUR GLASSES ====================
+\begin{frame}[t]{Nucleus at Four Temperatures}
+\vspace{5mm}
+\begin{center}
+\begin{tikzpicture}
+  \node[font=\small, text=mlpurple] at (5.1, 4.1) {nucleus of 0.9 after the Austen prompt, four temperatures};
+  \foreach \i/\T in {0/0.5, 1/0.7, 2/1.0, 3/1.5} {
+    \begin{scope}[shift={({3.0 * \i}, 0)}]
+      \draw[line width=1.5pt, mlpurple] (0.4, 3.3) -- (0.4, 0.6) -- (2.0, 0.6) -- (2.0, 3.3);
+      \draw[dashed, thick, mlorange] (0.2, 2.6) -- (2.2, 2.6) node[right, font=\small, text=mlorange] {0.9};
+      \node[font=\Huge, text=mlorange] at (1.2, 1.6) {?};
+      \node[font=\small] at (1.2, 0.2) {$T = \T$};
+    \end{scope}}
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{After the Austen prompt, the size of the nucleus of 0.9 depends on $T$.}
+\note{0.5 min. Each glass is filled to 0.9 with the likeliest tokens at one temperature. Ask the room to write down a guess for the number of tokens in each glass before the notebook is opened. Then the four lines of code.}
+\end{frame}
+
 % ==================== EXERCISE ====================
 \begin{frame}[fragile,t]{Nucleus Size at Four Temperatures}
 \begin{block}{Discovery Exercise}
@@ -963,6 +1697,17 @@ Derivations with checks on GPT-2 small: \href{\colab{02_sampling_mathematics}}{\
 \note{1.5 min. Answers: 2, 42, 3,784, 15,670 tokens; 0.959, the share of \texttt{the} in the two kept tokens, $0.885 / (0.885 + 0.038) = 0.959$; $B = 2$. In notebook 02, the appendix formulas are checked on the scores of GPT-2 small.}
 \end{frame}
 
+% ==================== OVERVIEW 7 ====================
+\begin{frame}[t]{One Distribution, Five Decoding Rules}
+\vspace{12mm}
+\begin{center}
+\overview{7}
+\end{center}
+
+\bottomnote{One next-token distribution is the input of all five decoding rules.}
+\note{0.5 min. All five pictures with a check: the distribution, greedy decoding, temperature, top-k with top-p, beam search. The takeaways have one result per picture, in words and in symbols.}
+\end{frame}
+
 % ==================== TAKEAWAYS ====================
 \begin{frame}[t]{Five Results on Decoding the Next Token}
 \begin{columns}[T]
@@ -983,7 +1728,7 @@ Derivations with checks on GPT-2 small: \href{\colab{02_sampling_mathematics}}{\
 \end{columns}
 
 \bottomnote{Each of the five rules is a map from one distribution per step to the next token.}
-\note{2 min. Ask, for each result, for the frame number in the footline of its first page: result 1 on frames 4, 5; result 2 on 8, 9; result 3 on 11, 12; result 4 on 15, 16; result 5 on 19 to 21. The numbers of GPT-2 small for results 2, 5 are on frames 28 to 30.}
+\note{2 min. Ask, for each result, for the frame number in the footline of its first page: result 1 on frames 7, 9; result 2 on 15, 17; result 3 on 21, 23; result 4 on 29, 31; result 5 on 37, 39, 41. The numbers of GPT-2 small for results 2, 5 are on frames 55, 57, 59.}
 \end{frame}
 
 % ==================== CLOSING ====================
@@ -1021,6 +1766,26 @@ Text Analytics, Chapter 7
 \end{center}
 \end{frame}
 
+% ==================== VISUAL: A2 ====================
+\begin{frame}[t]{Slope of the Entropy Curve}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[->, mlgray] (0, 0.4) -- (8.0, 0.4) node[right, font=\small, text=black] {temperature $T$};
+  \draw[->, mlgray] (0, 0.4) -- (0, 4.3) node[above, font=\small, text=black] {entropy $H$};
+  \draw[very thick, mlblue] plot[smooth, domain=0.05:7.6, samples=60] (\x, {0.4 + 3.3 * (1 - exp(-0.55 * \x))});
+  \draw[thick, mlorange] (0.8, 1.875) -- (3.4, 3.446);
+  \fill[mlorange] (2.0, 2.6) circle (2.5pt);
+  \node[font=\small, text=mlorange, anchor=west] at (0.3, 3.95) {slope $dH/dT \ge 0$};
+  \node[font=\small, text=mlblue, anchor=west] at (5.4, 2.95) {entropy curve};
+  \node[font=\small, text=mlgray, anchor=east] at (8.0, -0.05) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{The slope of the entropy in $T$ is at least zero at every $T$.}
+\note{0.5 min. The entropy $H$ against the temperature $T$: a rising curve. At every point, the slope $dH/dT$ is at least zero, as at the orange point. Then the derivation of the slope from the softmax with temperature, in three steps.}
+\end{frame}
+
 \begin{frame}[t]{A2: Derivative of the Entropy in T}
 % nouns: Derivative, Entropy
 \textbf{Given} $p_i^{(T)} = e^{\beta z_i} / Z(\beta)$ with $\beta = 1/T$, $Z(\beta) = \sum_j e^{\beta z_j}$; expectations under $p^{(T)}$.
@@ -1037,6 +1802,28 @@ Text Analytics, Chapter 7
 
 \bottomnote{The entropy of $p^{(T)}$ grows with $T$ at the rate $\mathrm{Var}(z) / T^3$.}
 \note{1.5 min. The variance is zero only when all scores are equal, and then $H = \log |V|$ at every $T$. In notebook 02, section 2, the formula is checked on the scores of GPT-2 small.}
+\end{frame}
+
+% ==================== VISUAL: A3 ====================
+\begin{frame}[t]{Kept Mass $M$, Cut Mass $1 - M$}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[mlgray] (-0.2, 0.6) -- (4.6, 0.6);
+  \foreach \i/\h in {0/2.0, 1/1.4, 2/1.0, 3/0.7} \fill[mlblue] (0.55 * \i, 0.6) rectangle ++(0.4, \h);
+  \foreach \i/\h in {4/0.5, 5/0.36, 6/0.26, 7/0.18} \fill[mlgray!50] (0.55 * \i, 0.6) rectangle ++(0.4, \h);
+  \node[font=\small] at (0.95, 0.2) {kept mass $M$};
+  \node[font=\small, text=mlgray] at (3.35, 0.2) {cut mass $1 - M$};
+  \draw[->, very thick, mlpurple] (5.0, 1.8) -- node[above, font=\small] {divided by $M$} (7.3, 1.8);
+  \draw[mlgray] (7.6, 0.6) -- (12.2, 0.6);
+  \foreach \i/\h in {0/2.5, 1/1.75, 2/1.25, 3/0.88} \fill[mlblue] (7.8 + 0.55 * \i, 0.6) rectangle ++(0.4, \h);
+  \node[font=\small] at (8.75, 0.2) {kept probabilities, sum 1};
+  \node[font=\small, text=mlgray, anchor=east] at (12.2, -0.2) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{After a cut, the kept probabilities are divided by the kept mass $M$.}
+\note{0.5 min. Left, before the cut: blue bars kept, grey bars cut. Right, the kept bars after the division by $M$: each one taller, with sum 1. Then the divergence of the cut distribution from $p$, a function of $M$ alone.}
 \end{frame}
 
 \begin{frame}[t]{A3: Divergence of a Truncation}
@@ -1056,6 +1843,25 @@ Text Analytics, Chapter 7
 \note{1.5 min. The total variation distance is $1 - M$ by the same steps. In the other direction, $\mathrm{KL}(p \parallel q)$ is infinite for $M < 1$: $p$ has mass on tokens with $q_i = 0$.}
 \end{frame}
 
+% ==================== VISUAL: A4 ====================
+\begin{frame}[t]{Min-p: a Line at a Share of the Largest Bar}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[mlgray] (-0.2, 0.4) -- (8.0, 0.4);
+  \foreach \i/\h in {0/3.2, 1/1.9, 2/1.2, 3/1.05} \fill[mlblue] (0.8 * \i, 0.4) rectangle ++(0.55, \h);
+  \foreach \i/\h in {4/0.75, 5/0.5, 6/0.35, 7/0.25, 8/0.18, 9/0.12} \fill[mlgray!50] (0.8 * \i, 0.4) rectangle ++(0.55, \h);
+  \draw[dashed, very thick, mlorange] (-0.3, 1.36) -- (8.1, 1.36);
+  \node[font=\small, text=mlorange, anchor=south east, align=right] at (8.1, 1.45) {min-p line:\\a share $p_{\text{base}}$ of the largest bar};
+  \node[font=\small, anchor=west] at (0.7, 3.4) {largest bar, $p_{\max}$};
+  \node[font=\small, text=mlgray, anchor=east] at (8.0, 0.0) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under min-p, a token is kept when its probability is at least a share of the largest one.}
+\note{0.5 min. The dashed line lies at the share $p_{\text{base}}$ of the tallest bar. Blue bars above it are kept, grey bars below it are cut. For a peaked $p$ the line is high, for a flat $p$ low. Then the bound on the number of blue bars.}
+\end{frame}
+
 \begin{frame}[t]{A4: Bound on the Number of Tokens Under Min-p}
 % nouns: Bound, Number, Tokens, Min-p
 \begin{block}{Definition}
@@ -1073,6 +1879,26 @@ Under \textbf{min-p} (Nguyen et al., 2024), the kept set is $S = \{\, i : p_i \g
 
 \bottomnote{Under min-$p$, the number of kept tokens is at most $1 + (1 - p_{\max}) / (p_{\text{base}}\, p_{\max})$.}
 \note{1.5 min. Min-p is a cut relative to the largest probability. With temperature first, the threshold on the scores is $z_i \ge z_{\max} + T \log p_{\text{base}}$, and the kept set grows with $T$. Nguyen et al. recommend $p_{\text{base}}$ between 0.05 and 0.1.}
+\end{frame}
+
+% ==================== VISUAL: A5 ====================
+\begin{frame}[t]{Penalty on a Repeated Token}
+\vspace{4mm}
+\begin{center}
+\begin{tikzpicture}
+  \draw[mlgray] (-0.2, 0.4) -- (6.4, 0.4);
+  \foreach \i/\h in {0/2.2, 2/1.6, 3/1.2, 4/0.9, 5/0.6} \fill[mlblue] (1.05 * \i, 0.4) rectangle ++(0.7, \h);
+  \draw[dashed, thick, mlorange] (1.05, 0.4) rectangle ++(0.7, 2.6);
+  \fill[mlorange] (1.05, 0.4) rectangle ++(0.7, 1.3);
+  \draw[->, very thick, mlorange] (1.4, 3.2) -- (1.4, 1.85);
+  \node[font=\small, text=mlorange, anchor=west] at (1.9, 3.35) {penalty on the repeated token};
+  \node[font=\small] at (3.0, 0.05) {scores of the tokens};
+  \node[font=\small, text=mlgray, anchor=east] at (6.4, -0.3) {Schematic};
+\end{tikzpicture}
+\end{center}
+
+\bottomnote{Under the repetition penalty, the score of a token already in the text is lowered.}
+\note{0.5 min. The orange bar is the score of a token already in the text: before the penalty, the dashed outline; after it, the filled bar. The other scores are unchanged. Then the two cases of the penalty, with its dependence on the offset of the scores.}
 \end{frame}
 
 \begin{frame}[t]{A5: Repetition Penalty, Offset of the Scores}

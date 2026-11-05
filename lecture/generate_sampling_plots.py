@@ -247,6 +247,8 @@ ax.grid(axis="y", visible=False)
 ax.text(vals[-1] + 0.004, 9, f"{vals[-1]:.3f}", va="center", color="#333333")
 ax.set_title("Ten likeliest tokens, $T = 1$")
 save(fig, out("austen_top10"))
+show(f"{1 - p[order[0]]:.3f}" == f"{1 - 0.1816:.3f}" == "0.818", "the 50,256 other tokens: 1 - 0.1816 = 0.818")
+show(f"{0.182 / 0.038:.1f}" == f"{p[order[0]] / p[order[1]]:.1f}" == "4.8", "first step: 0.182 / 0.038 = 4.8")
 
 print("\n== Temperature after the Austen prompt")
 zt, zr, za = (round(float(z[i]), 3) for i in order[:3])
@@ -259,7 +261,8 @@ for T, shown in ((0.5, "23.2"), (1.0, "4.82"), (2.0, "2.20")):
 for T in (0.5, 1.0, 2.0):
     pT = softmax(z, T)
     HT = -(pT[pT > 0] * np.log(pT[pT > 0])).sum()
-    print(f"T = {T}: p(the) = {pT[order[0]]:.3f}, H = {HT:.2f} nats")
+    show(f"{pT[order[0]]:.3f}" == {0.5: "0.885", 1.0: "0.182", 2.0: "0.005"}[T],
+         f"T = {T}: p(the) = {pT[order[0]]:.3f}, H = {HT:.2f} nats")
 print(f"log|V| = {np.log(V):.2f}")
 
 print("\n== Top-k, top-p after three prompts")
@@ -292,6 +295,26 @@ ax.set_xlabel("tokens, likeliest first (log scale)")
 ax.set_ylabel("cumulative probability")
 ax.set_title("Tokens to reach 0.9")
 save(fig, out("cumulative_three"))
+
+fig, axs = setup(width=0.9, aspect=0.3, ncols=3)          # one chart across the page, three prompts
+for ax, (name, prompt), head in zip(axs, (("peaked", PEAKED), ("Austen", AUSTEN), ("flat", FLAT)),
+                                    ("The Prime Minister\nof the United", "It is a truth universally\nacknowledged that",
+                                     "I went to the")):
+    q20 = np.sort(softmax(logits(prompt)))[::-1][:20]
+    show(f"{q20[0]:.3f}" == {"peaked": "0.799", "Austen": "0.182", "flat": "0.033"}[name],
+         f"{name}: largest of the 20 likeliest probabilities {q20[0]:.3f}")
+    ax.bar(np.arange(20), q20, color=[C["orange"]] + [C["blue"]] * 19, width=0.7)
+    ax.text(1.0, q20[0], f"{q20[0]:.3f}", va="bottom", color="#333333")
+    ax.set_ylim(0, 0.9)
+    ax.set_xticks([])
+    ax.set_xlabel("20 likeliest tokens")
+    ax.set_title(head)
+    ax.grid(axis="x", visible=False)
+axs[0].set_ylabel("probability")
+for ax in axs[1:]:
+    ax.set_yticklabels([])
+fig.tight_layout()
+save(fig, out("three_shapes"))
 
 print("\n== Two-step tree after the Austen prompt")
 tree = two_step_tree(AUSTEN)
